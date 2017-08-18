@@ -1,6 +1,6 @@
-/*
-    Responsible: Mridul Sarkar
-*/
+/**
+ *   Responsible: Mridul Sarkar
+ */
 package com.mridul.pms;
 
 // Class Car implementation
