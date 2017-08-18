@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+set -e
+
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+#constants
+#github url
+readonly PMS_GIT_URL=https://github.com/mridulsarkar/pms
+
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+echo -e "\x1B[36m"
+echo "=============================================="
+echo "PMS Build Environment Setup"
+echo "=============================================="
+echo -e "\x1B[0m"
+
+# Read user Password
+echo -n "Enter your System Login password: "
+read -s p_password
+echo
+
+if [[ -z $p_password ]]; then
+    echo "Password cannot be empty!"
+    exit 1
+fi
+
+# install required software using sudo ==============
+
+
+PRODUCT_NAME="git command-line tools"
+if [ ! -z "$(which git)" ]
+then
+    echo "${PRODUCT_NAME} ALREADY INSTALLED =========="
+else
+    echo "INSTALLING ${PRODUCT_NAME}... _________________________"
+    echo $p_password | sudo brew install git
+    echo "DONE installing ${PRODUCT_NAME} _________________________"
+fi
+
+
+function defineUserRoot {
+    echo "Your ${bold}DEV ROOT${normal} will be set to ${bold}/Mridul/PMS${normal} as this will speed up your workflow."
+    echo "This is because the Virus Scan will not interfere with file operations in this path."
+    echo
+    echo "If you agree with this shortcut path, press ENTER. Otherwise specify another path:"
+    read v_manualUserRoot
+
+    if [[ ! -z $v_manualUserRoot ]]; then
+        USER_ROOT=$v_manualUserRoot
+    else
+        USER_ROOT=$HOME/Mridul
+    fi
+
+    export USER_ROOT
+}
+
+if [[ ! -z $USER_ROOT ]]; then
+    echo "Your ${bold}DEV ROOT${normal} was already configured and the shortcut was set to $USER_ROOT."
+    echo "Do you want to reconfigure your DEV ROOT? (y/n - default is n)"
+    read redoDevRoot
+    if [[ -z $redoDevRoot ]]; then
+        redoDevRoot=n
+    fi
+
+    if [[ $redoDevRoot == "y" ]]; then
+        defineUserRoot
+    elif [[ $redoDevRoot != "n" ]]; then
+        echo "Unrecognized option \"$redoDevRoot\". Exiting installer..."
+        exit 1
+    fi
+else
+    defineUserRoot
+fi
+
+# Don't copy maven if present
+if [[ ! -L "$HOME/.m2/repository" ]]; then
+    echo "Maven already present..."
+else
+    # create directories
+    echo
+    echo "=== Creating directories..."
+    mkdir -p $USER_ROOT/devtools
+    echo "Maven not found" 
+    # copy devtools folder
+    echo
+    echo "=== Copying devtools..."
+    cp -rf $CURRENT_DIR/files/devtools $USER_ROOT
+    export M2_HOME="$USER_ROOT/devtools/apache-maven-3.1.1"
+    export PATH="$PATH:$M2_HOME/bin"
+fi
+
+echo "Cloning PMS Codebase in your local repository"
+ 
+# Checking git url and cloning repo in your local dev machine if the local repository doesn't exists
+if [[ ! -d $USER_ROOT/PMS/.git ]]; then
+    echo "git repository url is " $PMS_GIT_URL
+
+    if ! git clone $PMS_GIT_URL $USER_ROOT/PMS
+    then
+    echo "git clone is failed, please try again!!"
+    else
+    echo "git clone is success !!"
+    fi
+fi
+
+# build start
+echo "Build is going to start"
+cd $USER_ROOT/PMS
+if ! mvn clean install -Dmaven.test.skip=true
+    then
+    echo "PMS build is failed !!"
+    else
+    echo "PMS build is successfull!!"
+fi
+
+# run junits
+echo "Running junits..."
+cd $USER_ROOT/PMS
+mvn -Dtest=PMJunit test
+
+# run the PMS application now
+echo "PMS application is up and running!!"
+java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement

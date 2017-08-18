@@ -15,7 +15,7 @@ public class ParkingLot {
     private static final int defaultCapacity = 10;
     private int totalParkingSlots = 0;
     private PriorityQueue<ParkingSlot> parkingSlotQueue;
-    private Map<Integer, ParkingSlot> occupiedSlots = new HashMap<Integer, ParkingSlot>();
+    private Map<Integer, ParkingSlot> occupiedSlots;
     
     // Default Constructor
     public ParkingLot() {
@@ -26,6 +26,7 @@ public class ParkingLot {
     public ParkingLot(int totalParkingSlots) {
         this.totalParkingSlots = totalParkingSlots;
         parkingSlotQueue = new PriorityQueue<ParkingSlot>(totalParkingSlots, new ParkingSlotComparator());
+        occupiedSlots = new HashMap<Integer, ParkingSlot>(totalParkingSlots);
         // Initialise the priority queue with all the parking slots
         for (int i = 1; i <= totalParkingSlots; i++) {
             parkingSlotQueue.add(new ParkingSlot(i));
@@ -34,18 +35,18 @@ public class ParkingLot {
     }
 
     // Method to get Total number of slots in the parking slot
-    public int getTotalSlots() {
+    public int getTotalParkingSlots() {
         return totalParkingSlots;
     }
     
-    // Method to get Available slots in the parking slot
-    public synchronized int availableSlots() {
+    // Method to get Available slots in the parking lot
+    public synchronized int availableParkingSlots() {
         return parkingSlotQueue.size();
     }
     
-    // Method to get Occupied slots in the parking slot
-    public synchronized int occupiedSlots() {
-        return totalParkingSlots - parkingSlotQueue.size();
+    // Method to get Occupied slots in the parking lot
+    public synchronized int occupiedParkingSlots() {
+        return occupiedSlots.size();
     }
 
     // Comparator to sort the parking lots
@@ -72,7 +73,9 @@ public class ParkingLot {
     }
     
     // Method to Add a vehicle to the parking slot
-    public synchronized void parkVehicle(Vehicle vehicle) {
+    // returns true for a succsfully booking a parking slot
+    // returns false if the parking lot is full
+    public synchronized boolean parkVehicle(Vehicle vehicle) {
         // If priority queue is not empty which means parking slots are available   
         if (!parkingSlotQueue.isEmpty()) {
             // Get a available parking slot from the queue
@@ -82,17 +85,21 @@ public class ParkingLot {
             // Book the slot and allocate to the New vehicle coming into the parking lot
             reserveSlot.bookSlot(vehicle);
             System.out.println("Allocated slot number: " + reserveSlot.getParkingSlotID().intValue() + "\n");
+            return true;
         } else {
             System.out.println("Sorry, parking lot is full\n");
+            return false;
         }   
     }
 
     // Method to Remove a vehicle from the parking slot
-    public synchronized void removeVehicle(int freeThisSlot) { 
+    // returns true for a succsfully freeing a parking slot
+    // returns false for an invalid parking slot-id
+    public synchronized boolean removeVehicle(int freeThisSlot) { 
         // Check if a valid slot-id has been given
         if (!occupiedSlots.containsKey(freeThisSlot)) {
             System.err.println("Invalid Slot number " + freeThisSlot + "\n");
-            return;
+            return false;
         }
         // Remove this slot from occupied slot map
         ParkingSlot removedSlot = occupiedSlots.remove(freeThisSlot);
@@ -100,11 +107,13 @@ public class ParkingLot {
         // Add this free slot now to the priority queue
         parkingSlotQueue.add(removedSlot);
         System.out.println("Slot number " + freeThisSlot + " is free\n");
+        return true;
     }
 
     // Method prints Regn number of Vehicles parked based on a given colour
-    public synchronized void lookupRegnWithColor(String colour) {
-        ArrayList <String> parkingSlotList = new ArrayList<String>();
+    // And returns list of the matched vehicles
+    public synchronized List <String> lookupRegnWithColour(String colour) {
+        List <String> parkingSlotList = new ArrayList<String>();
         ParkingSlot slot = null;
         for (Map.Entry<Integer, ParkingSlot> prkngSlot  : occupiedSlots.entrySet()) {
             slot = (ParkingSlot) prkngSlot.getValue();
@@ -117,11 +126,13 @@ public class ParkingLot {
         } else {
             System.out.println("Not found" + "\n");
         }
+        return parkingSlotList;
     }
 
     // Method prints Occupied Parking Slot numbers based on vehicle colour
-    public synchronized void lookupSlotWithColor(String colour) {
-        ArrayList <Integer> parkingSlotList = new ArrayList<Integer>();
+    // And returns list of the matched vehicles
+    public synchronized List <Integer> lookupSlotWithColour(String colour) {
+        List <Integer> parkingSlotList = new ArrayList<Integer>();
         ParkingSlot slot = null;
         for (Map.Entry<Integer, ParkingSlot> prkngSlot  : occupiedSlots.entrySet()) {
             slot = (ParkingSlot) prkngSlot.getValue();
@@ -134,10 +145,12 @@ public class ParkingLot {
         } else {
             System.out.println("Not found");
         }
+        return parkingSlotList;
     }
 
     // Method prints Occupied Parking Slot numbers based on vehicle registration number
-    public synchronized void lookupSlotWithVehicleRegnNumber(String vehicleRegn) {
+    // And returns list of the matched vehicles
+    public synchronized List <Integer> lookupSlotWithVehicleRegnNumber(String vehicleRegn) {
         List <Integer> parkingSlotList = new ArrayList<Integer>();
         ParkingSlot slot = null;
         for (Map.Entry<Integer, ParkingSlot> prkngSlot  : occupiedSlots.entrySet()) {
@@ -151,6 +164,7 @@ public class ParkingLot {
         } else {
             System.out.println("Not found");
         }
+        return parkingSlotList;
     }           
 
     // Method to print parked vehicle details

@@ -92,14 +92,14 @@ public class ParkingManagement {
                 case 5:
                         if ( parts.length == 2 ) {
                             initializeParkingLot();
-                            myPrkngLot.lookupRegnWithColor(parts[1]);
+                            myPrkngLot.lookupRegnWithColour(parts[1]);
                             validCmd = true;                            
                         }
                         break;
                 case 6:
                         if ( parts.length == 2 ) {
                             initializeParkingLot();
-                            myPrkngLot.lookupSlotWithColor(parts[1]);
+                            myPrkngLot.lookupSlotWithColour(parts[1]);
                             validCmd = true;                            
                         }                
                         break;
