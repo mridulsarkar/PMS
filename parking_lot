@@ -16,16 +16,6 @@ echo "PMS Build Environment Setup"
 echo "=============================================="
 echo -e "\x1B[0m"
 
-# Read user Password
-echo -n "Enter your System Login password: "
-read -s p_password
-echo
-
-if [[ -z $p_password ]]; then
-    echo "Password cannot be empty!"
-    exit 1
-fi
-
 # install required software using sudo ==============
 
 
@@ -35,13 +25,23 @@ then
     echo "${PRODUCT_NAME} ALREADY INSTALLED =========="
 else
     echo "INSTALLING ${PRODUCT_NAME}... _________________________"
+    # Read user Password
+    echo -n "Enter your System Login password for sudo ${PRODUCT_NAME} install: "
+    read -s p_password
+    echo
+
+    if [[ -z $p_password ]]; then
+	    echo "Password cannot be empty!"
+	    exit 1
+    fi
+
     echo $p_password | sudo brew install git
     echo "DONE installing ${PRODUCT_NAME} _________________________"
 fi
 
 
 function defineUserRoot {
-    echo "Your ${bold}DEV ROOT${normal} will be set to ${bold}/Mridul/PMS${normal} as this will speed up your workflow."
+    echo "Your ${bold}DEV ROOT${normal} will be set to ${bold}$HOME/PMS${normal} as this will speed up your workflow."
     echo "This is because the Virus Scan will not interfere with file operations in this path."
     echo
     echo "If you agree with this shortcut path, press ENTER. Otherwise specify another path:"
@@ -50,7 +50,7 @@ function defineUserRoot {
     if [[ ! -z $v_manualUserRoot ]]; then
         USER_ROOT=$v_manualUserRoot
     else
-        USER_ROOT=$HOME/Mridul
+        USER_ROOT=$HOME/PMS
     fi
 
     export USER_ROOT
@@ -91,13 +91,14 @@ else
     export PATH="$PATH:$M2_HOME/bin"
 fi
 
-echo "Cloning PMS Codebase in your local repository"
- 
 # Checking git url and cloning repo in your local dev machine if the local repository doesn't exists
-if [[ ! -d $USER_ROOT/PMS/.git ]]; then
+if [[ -d $USER_ROOT/.git ]]; then
+    echo "Using local git repository..."
+else
+    echo "Cloning PMS Codebase in your local repository..."
     echo "git repository url is " $PMS_GIT_URL
 
-    if ! git clone $PMS_GIT_URL $USER_ROOT/PMS
+    if ! git clone $PMS_GIT_URL $USER_ROOT
     then
     echo "git clone is failed, please try again!!"
     else
@@ -107,8 +108,8 @@ fi
 
 # build start
 echo "PMS Build starting..."
-cd $USER_ROOT/PMS
-if ! mvn clean install -Dmaven.test.skip=true
+cd $USER_ROOT
+if ! mvn clean install
     then
     echo "PMS build has failed !!"
     else
@@ -119,12 +120,12 @@ fi
 echo "PMS application is Coming Up!"
 echo 
 echo "${bold}---Running PMS with file input---${bold}"
-echo "${bold}java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement $USER_ROOT/PMS/file_inputs.txt${normal}"
-java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement $USER_ROOT/PMS/file_inputs.txt
+echo "${bold}java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement $USER_ROOT/file_inputs.txt${normal}"
+java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement $USER_ROOT/file_inputs.txt
 
 
 echo 
 echo
-echo "${bold}---Running PMS for command prompt input---${bold}"
+echo "${bold}---Running PMS to accept inputs from command prompt---${bold}"
 echo "${bold}java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement${normal}"
 java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement
