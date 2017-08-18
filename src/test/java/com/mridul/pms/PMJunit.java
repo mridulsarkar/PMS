@@ -8,11 +8,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.Rule;
 import org.junit.runner.JUnitCore;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.rules.TestWatcher;
+import org.junit.rules.TestWatchman;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,22 +26,25 @@ import java.util.List;
 public class PMJunit {
     private ParkingLot pLot;
 
-    @BeforeClass
-    public static void initParkingLot() {
-        //pLot = new ParkingLot(2);
-    }
-
     @Before
     public void beforeEachTest() {
+        // Create a Parking Lot with 2 parking slots
         pLot = new ParkingLot(2);
-        //System.out.println("This is executed before each Test");
     }
 
     @After
     public void afterEachTest() {
+        // dereference for GC
         pLot = null;
-        //System.out.println("This is executed after each Test");
     }
+
+    // Prints junit test being run
+    @Rule  
+    public MethodRule watchman = new TestWatchman() {
+        public void starting(FrameworkMethod method) {
+            System.out.println("Starting test: " + method.getName() + ".........");
+        }
+    };
 
     @Test
     public void testCreateParkingLot() {
@@ -127,6 +136,21 @@ public class PMJunit {
     }
 
     @Test
+    public void testVehicleLookUpByRegnNotFound() {
+        // Add First Car
+        Vehicle vh = new Car("park KA-01-HH-3141", "Black");
+        pLot.parkVehicle(vh); // Park Car1
+        
+        // Add Second Car
+        vh = new Car("KA-01-HH-7777", "Red");
+        pLot.parkVehicle(vh); // Park Car2
+
+        // Lookup for Parking slot# with Regn number "KA-01-HH-9999"
+        List <Integer> parkingSlotList = ( List <Integer>) pLot.lookupSlotWithVehicleRegnNumber("KA-01-HH-9999");
+        assertFalse(parkingSlotList.size() > 0); // This should return No Slots
+    }
+
+    @Test
     public void testVehicleLookUpByColour() {
         pLot = null;
         // Create a Parking lot with 3 car parks
@@ -144,7 +168,22 @@ public class PMJunit {
 
         // Lookup for car with "White" colour
         List <String> parkingSlotList = ( List <String>) pLot.lookupRegnWithColour("White");
-        assertEquals(2, parkingSlotList.size()); // We should retrieve 2 White cars
+        assertTrue(2 == parkingSlotList.size()); // We should retrieve 2 White cars
+    }
+
+    @Test
+    public void testVehicleLookUpByColourNotFound() {
+        // Add First Car
+        Vehicle vh = new Car("park KA-01-HH-3141", "Black");
+        pLot.parkVehicle(vh); // Park Car1
+        
+        // Add Second Car
+        vh = new Car("KA-01-HH-7777", "Red");
+        pLot.parkVehicle(vh); // Park Car2
+
+        // Lookup for Car with color "White"
+        List <String> parkingSlotList = ( List <String>) pLot.lookupRegnWithColour("White");
+        assertFalse(parkingSlotList.size() > 0); // This should return No Cars
     }
 
     @Test

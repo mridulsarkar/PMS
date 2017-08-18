@@ -106,20 +106,25 @@ if [[ ! -d $USER_ROOT/PMS/.git ]]; then
 fi
 
 # build start
-echo "Build is going to start"
+echo "PMS Build starting..."
 cd $USER_ROOT/PMS
 if ! mvn clean install -Dmaven.test.skip=true
     then
-    echo "PMS build is failed !!"
+    echo "PMS build has failed !!"
     else
     echo "PMS build is successfull!!"
 fi
 
-# run junits
-echo "Running junits..."
-cd $USER_ROOT/PMS
-mvn -Dtest=PMJunit test
-
 # run the PMS application now
-echo "PMS application is up and running!!"
+echo "PMS application is Coming Up!"
+echo 
+echo "${bold}---Running PMS with file input---${bold}"
+echo "${bold}java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement $USER_ROOT/PMS/file_inputs.txt${normal}"
+java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement $USER_ROOT/PMS/file_inputs.txt
+
+
+echo 
+echo
+echo "${bold}---Running PMS for command prompt input---${bold}"
+echo "${bold}java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement${normal}"
 java -cp target/PMS-1.0-SNAPSHOT.jar com.mridul.pms.ParkingManagement
